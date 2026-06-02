@@ -24,6 +24,7 @@ export const BorderRadius = {
   xl: 20,
   '2xl': 24,
   full: 9999,
+  pill: 9999,
 } as const;
 
 export const IconSize = {

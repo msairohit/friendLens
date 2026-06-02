@@ -70,6 +70,7 @@ export interface Review {
   comment: string | null;
   link: string | null; // original URL pasted by user
   isPublic: boolean;
+  sharingLevel: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -174,6 +175,7 @@ export interface CreateReviewInput {
   comment?: string;
   link?: string;
   isPublic?: boolean;
+  sharingLevel?: number;
 }
 
 export interface CreateItemInput {

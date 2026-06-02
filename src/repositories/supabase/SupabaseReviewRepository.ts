@@ -25,6 +25,7 @@ export class SupabaseReviewRepository implements IReviewRepository {
         comment: review.comment || null,
         link: review.link || null,
         is_public: review.isPublic ?? false,
+        sharing_level: review.sharingLevel ?? (review.isPublic ? 4 : 1),
       })
       .select()
       .single();
@@ -38,7 +39,13 @@ export class SupabaseReviewRepository implements IReviewRepository {
     if (data.rating !== undefined) updateData.rating = data.rating;
     if (data.comment !== undefined) updateData.comment = data.comment;
     if (data.link !== undefined) updateData.link = data.link;
-    if (data.isPublic !== undefined) updateData.is_public = data.isPublic;
+    if (data.isPublic !== undefined) {
+      updateData.is_public = data.isPublic;
+      if (data.sharingLevel === undefined) {
+        updateData.sharing_level = data.isPublic ? 4 : 1;
+      }
+    }
+    if (data.sharingLevel !== undefined) updateData.sharing_level = data.sharingLevel;
 
     const { data: result, error } = await supabase
       .from('reviews')
@@ -138,16 +145,17 @@ export class SupabaseReviewRepository implements IReviewRepository {
       comment: (row.comment as string) || null,
       link: null,
       isPublic: true,
-      createdAt: '',
-      updatedAt: '',
+      sharingLevel: (row.sharing_level as number) ?? 1,
+      createdAt: (row.created_at as string) || '',
+      updatedAt: (row.updated_at as string) || '',
       item: {
         id: '',
         title: row.item_title as string,
         type: row.item_type as FeedReview['item']['type'],
         externalId: null,
-        posterUrl: null,
+        posterUrl: (row.item_poster_url as string) || null,
         description: null,
-        releaseYear: null,
+        releaseYear: (row.item_release_year as number) || null,
         metadata: null,
         createdAt: '',
       },
@@ -220,6 +228,7 @@ export class SupabaseReviewRepository implements IReviewRepository {
       comment: (row.comment as string) || null,
       link: (row.link as string) || null,
       isPublic: row.is_public as boolean,
+      sharingLevel: (row.sharing_level as number) ?? (row.is_public ? 4 : 1),
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
     };
