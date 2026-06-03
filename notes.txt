@@ -11,7 +11,7 @@ Password1
 TMDb API Reference fields and sample responses have been saved to tmdb_api_reference.md!
 filters in network tab
 (done)need to add gitlab actions like we did for shopgrid app to keep this project active in supabase.
-Add proper readme file (other way to use this app is to act as what to watch next as well based on friends.)
+(done)Add proper readme file (other way to use this app is to act as what to watch next as well based on friends.)
 (done) In add review page, show the image properly in some big size after selecting from tmdb.
 (done)ability to view friends.
 (done)ability to send friend requests based on id and from contacts as well.
