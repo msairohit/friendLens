@@ -1,0 +1,40 @@
+name: Supabase Keep-Alive Ping
+
+# WHY THIS EXISTS:
+# Supabase free tier pauses projects after 7 days of inactivity.
+# This workflow runs every 5 days and makes a lightweight API call
+# to keep the project active — preventing pausing and data loss.
+
+on:
+  schedule:
+    # Runs every 5 days at 8:00 AM UTC (1:30 PM IST)
+    # Cron format: minute hour day-of-month month day-of-week
+    - cron: '0 8 */5 * *'
+
+  # Allows you to manually trigger this from the GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    name: Ping Supabase Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          echo "⏰ Sending keep-alive ping to Supabase at $(date)..."
+
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/tenants?select=id&limit=1")
+
+          echo "📡 HTTP Response Status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Supabase is alive and reachable! Project will not be paused."
+          else
+            echo "❌ Unexpected status code: $HTTP_STATUS"
+            echo "Check if your SUPABASE_URL and SUPABASE_ANON_KEY secrets are set correctly."
+            exit 1
+          fi
