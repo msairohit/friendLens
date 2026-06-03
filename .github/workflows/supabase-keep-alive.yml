@@ -27,7 +27,7 @@ jobs:
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/tenants?select=id&limit=1")
+            "${{ secrets.SUPABASE_URL }}/rest/v1/items?select=id&limit=1")
 
           echo "📡 HTTP Response Status: $HTTP_STATUS"
 
