@@ -139,7 +139,7 @@ export class SupabaseReviewRepository implements IReviewRepository {
 
     const feedReviews: FeedReview[] = (networkData || []).map((row: Record<string, unknown>) => ({
       id: row.review_id as string,
-      userId: '',
+      userId: (row.reviewer_id as string) || '',
       itemId: (row.item_id as string) || '',
       rating: row.rating as number,
       comment: (row.comment as string) || null,
@@ -160,7 +160,7 @@ export class SupabaseReviewRepository implements IReviewRepository {
         createdAt: '',
       },
       profile: {
-        id: '',
+        id: (row.reviewer_id as string) || '',
         username: '',
         displayName: row.is_anonymous
           ? (row.reviewer_pseudonym as string) || 'Anonymous'
@@ -245,18 +245,16 @@ export class SupabaseReviewRepository implements IReviewRepository {
         displayName: row.profile?.display_name || 'Unknown',
       }));
 
-      // Merge and deduplicate, prioritizing network status (depth 0, 1, 2)
-      const mergedMap = new Map<string, FeedReview>();
-      feedReviews.forEach((r) => mergedMap.set(r.id, r));
-      publicReviews.forEach((r) => {
-        if (!mergedMap.has(r.id)) {
-          mergedMap.set(r.id, r);
-        }
-      });
+      // Find all user IDs in the user's network to exclude them
+      const networkUserIds = new Set<string>([
+        userId,
+        ...(networkData || []).map((row: any) => row.reviewer_id as string).filter(Boolean)
+      ]);
 
-      finalReviews = Array.from(mergedMap.values()).sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      // Global feed should exclude any review authored by a user in the network
+      finalReviews = publicReviews
+        .filter((r) => !networkUserIds.has(r.userId))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
     // Apply pagination
@@ -314,7 +312,7 @@ export class SupabaseReviewRepository implements IReviewRepository {
       .filter((row: any) => row.item_id === itemId)
       .map((row: any) => ({
         id: row.review_id,
-        userId: '',
+        userId: (row.reviewer_id as string) || '',
         itemId: row.item_id,
         rating: row.rating,
         comment: row.comment,
@@ -335,7 +333,7 @@ export class SupabaseReviewRepository implements IReviewRepository {
           createdAt: '',
         },
         profile: {
-          id: '',
+          id: (row.reviewer_id as string) || '',
           username: '',
           displayName: row.is_anonymous
             ? (row.reviewer_pseudonym || 'Anonymous')
@@ -417,16 +415,16 @@ export class SupabaseReviewRepository implements IReviewRepository {
       displayName: row.profile?.display_name || 'Unknown',
     }));
 
-    // Merge and deduplicate
-    const mergedMap = new Map<string, FeedReview>();
-    networkItemReviews.forEach((r: FeedReview) => mergedMap.set(r.id, r));
-    publicItemReviews.forEach((r: FeedReview) => {
-      if (!mergedMap.has(r.id)) {
-        mergedMap.set(r.id, r);
-      }
-    });
+    // Find all user IDs in the user's network to exclude them from global detail view
+    const networkUserIds = new Set<string>([
+      userId,
+      ...(networkData || []).map((row: any) => row.reviewer_id as string).filter(Boolean)
+    ]);
 
-    return Array.from(mergedMap.values()).sort(
+    // Filter global reviews to exclude any network users
+    const filteredGlobalReviews = publicItemReviews.filter((r) => !networkUserIds.has(r.userId));
+
+    return filteredGlobalReviews.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }

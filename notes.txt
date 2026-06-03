@@ -20,8 +20,8 @@ send notification inapp and system when someone sends friend request and sender 
 (done)in profile page the friends count is not updated but in connections page it is updated.
 (done)search tmdb only when its under movies or tvshows. to reduce the api calls.
 (not priority)Upon clicking any review, can open review detail page with maximized details like links, or extra details and big image etc.
-what is the logic when one movie has reviews from others which are not his friends then we will not show the reviews right? but if yes then but we also have public sharing right, those should be visible and the users can have option to toggle to see within network(then they can see only friends reviews ) but when they toggle for global then they can see others who shared publicly so that this app also works as general rating app as well. 
-We can add a toggle switch or segment control (e.g., "My Network" vs. "Global") on the feed and item detail pages to let the user switch between these views. Let me know if you would like me to help implement this toggle/global view functionality next!
+(done)what is the logic when one movie has reviews from others which are not his friends then we will not show the reviews right? but if yes then but we also have public sharing right, those should be visible and the users can have option to toggle to see within network(then they can see only friends reviews ) but when they toggle for global then they can see others who shared publicly so that this app also works as general rating app as well. 
+(done)We can add a toggle switch or segment control (e.g., "My Network" vs. "Global") on the feed and item detail pages to let the user switch between these views. Let me know if you would like me to help implement this toggle/global view functionality next!
 
 
 

@@ -41,6 +41,7 @@ export default function ItemDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [tmdbRating, setTmdbRating] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   // Statistics
   const [stats, setStats] = useState({
@@ -407,9 +408,16 @@ export default function ItemDetailScreen() {
                       {item.releaseYear ? ` • ${item.releaseYear}` : ''}
                     </Text>
                   </View>
-                  <Text style={[Typography.bodySmall, styles.description]} numberOfLines={5}>
-                    {item.description || 'No description available for this item.'}
-                  </Text>
+                  <TouchableOpacity onPress={() => setDescriptionExpanded(!descriptionExpanded)} activeOpacity={0.7}>
+                    <Text style={[Typography.bodySmall, styles.description]} numberOfLines={descriptionExpanded ? undefined : 5}>
+                      {item.description || 'No description available for this item.'}
+                    </Text>
+                    {item.description && item.description.length > 150 && (
+                      <Text style={{ color: colors.accentStart, fontSize: 11, fontWeight: '600', marginTop: 4 }}>
+                        {descriptionExpanded ? 'Show less' : 'Read more'}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
                 </View>
               </View>
             </GlassCard>
