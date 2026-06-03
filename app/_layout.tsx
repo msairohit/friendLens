@@ -109,6 +109,7 @@ function RootLayoutNav() {
         <Stack.Screen name="friends/index" options={{ title: 'Connections', headerBackTitle: 'Back' }} />
         <Stack.Screen name="friends/add-friend" options={{ title: 'Add Friend', headerBackTitle: 'Back' }} />
         <Stack.Screen name="friends/discover" options={{ title: 'Scan Contacts', headerBackTitle: 'Back' }} />
+        <Stack.Screen name="item/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>

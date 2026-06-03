@@ -128,19 +128,19 @@ export class SupabaseReviewRepository implements IReviewRepository {
     userId: string,
     options: FeedOptions = { page: 1, pageSize: 20 }
   ): Promise<PaginatedResult<FeedReview>> {
-    // Use the Supabase RPC function for network feed
-    const { data, error } = await supabase.rpc('get_network_reviews', {
+    // 1. Fetch network reviews
+    const { data: networkData, error: networkError } = await supabase.rpc('get_network_reviews', {
       p_user_id: userId,
       p_depth: 2,
       p_item_type: options.typeFilter || null,
     });
 
-    if (error) throw new Error(error.message);
+    if (networkError) throw new Error(networkError.message);
 
-    const feedReviews: FeedReview[] = (data || []).map((row: Record<string, unknown>) => ({
+    const feedReviews: FeedReview[] = (networkData || []).map((row: Record<string, unknown>) => ({
       id: row.review_id as string,
       userId: '',
-      itemId: '',
+      itemId: (row.item_id as string) || '',
       rating: row.rating as number,
       comment: (row.comment as string) || null,
       link: null,
@@ -149,7 +149,7 @@ export class SupabaseReviewRepository implements IReviewRepository {
       createdAt: (row.created_at as string) || '',
       updatedAt: (row.updated_at as string) || '',
       item: {
-        id: '',
+        id: (row.item_id as string) || '',
         title: row.item_title as string,
         type: row.item_type as FeedReview['item']['type'],
         externalId: null,
@@ -178,16 +178,97 @@ export class SupabaseReviewRepository implements IReviewRepository {
         : (row.reviewer_name as string) || 'Unknown',
     }));
 
+    let finalReviews = feedReviews;
+
+    // 2. Fetch global reviews if scope is 'global'
+    if (options.scope === 'global') {
+      let publicQuery = supabase
+        .from('reviews')
+        .select(`
+          id,
+          user_id,
+          item_id,
+          rating,
+          comment,
+          link,
+          is_public,
+          sharing_level,
+          created_at,
+          updated_at,
+          item:items!inner(id, title, type, external_id, poster_url, description, release_year, metadata, created_at),
+          profile:profiles(*)
+        `)
+        .eq('sharing_level', 4);
+
+      if (options.typeFilter) {
+        publicQuery = publicQuery.eq('item.type', options.typeFilter);
+      }
+
+      const { data: publicData, error: publicError } = await publicQuery;
+      if (publicError) throw new Error(publicError.message);
+
+      const publicReviews: FeedReview[] = (publicData || []).map((row: any) => ({
+        id: row.id,
+        userId: row.user_id,
+        itemId: row.item_id,
+        rating: row.rating,
+        comment: row.comment,
+        link: row.link,
+        isPublic: row.is_public,
+        sharingLevel: row.sharing_level,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        item: {
+          id: row.item.id,
+          title: row.item.title,
+          type: row.item.type,
+          externalId: row.item.external_id,
+          posterUrl: row.item.poster_url,
+          description: row.item.description,
+          releaseYear: row.item.release_year,
+          metadata: row.item.metadata,
+          createdAt: row.item.created_at,
+        },
+        profile: {
+          id: row.profile?.id || '',
+          username: row.profile?.username || '',
+          displayName: row.profile?.display_name || 'Unknown',
+          avatarUrl: row.profile?.avatar_url || null,
+          phone: row.profile?.phone || null,
+          email: row.profile?.email || '',
+          friendTag: row.profile?.friend_tag || '',
+          createdAt: row.profile?.created_at || '',
+          updatedAt: row.profile?.updated_at || '',
+        },
+        depth: 3, // depth 3 represents public review outside network
+        isAnonymous: false,
+        displayName: row.profile?.display_name || 'Unknown',
+      }));
+
+      // Merge and deduplicate, prioritizing network status (depth 0, 1, 2)
+      const mergedMap = new Map<string, FeedReview>();
+      feedReviews.forEach((r) => mergedMap.set(r.id, r));
+      publicReviews.forEach((r) => {
+        if (!mergedMap.has(r.id)) {
+          mergedMap.set(r.id, r);
+        }
+      });
+
+      finalReviews = Array.from(mergedMap.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    }
+
     // Apply pagination
     const from = (options.page - 1) * options.pageSize;
-    const paginated = feedReviews.slice(from, from + options.pageSize);
+    const paginated = finalReviews.slice(from, from + options.pageSize);
 
     return {
       data: paginated,
-      total: feedReviews.length,
+      total: finalReviews.length,
       page: options.page,
       pageSize: options.pageSize,
-      hasMore: feedReviews.length > from + paginated.length,
+      hasMore: finalReviews.length > from + paginated.length,
     };
   }
 
@@ -215,6 +296,139 @@ export class SupabaseReviewRepository implements IReviewRepository {
       comment: (row.comment as string) || null,
       depth: row.depth as number,
     }));
+  }
+
+  async getItemReviewsDetail(
+    itemId: string,
+    userId: string,
+    scope: 'network' | 'global'
+  ): Promise<FeedReview[]> {
+    // 1. Fetch network reviews and filter by itemId
+    const { data: networkData, error: networkError } = await supabase.rpc('get_network_reviews', {
+      p_user_id: userId,
+      p_depth: 2,
+    });
+    if (networkError) throw new Error(networkError.message);
+
+    const networkItemReviews = (networkData || [])
+      .filter((row: any) => row.item_id === itemId)
+      .map((row: any) => ({
+        id: row.review_id,
+        userId: '',
+        itemId: row.item_id,
+        rating: row.rating,
+        comment: row.comment,
+        link: null,
+        isPublic: true,
+        sharingLevel: row.sharing_level ?? 1,
+        createdAt: row.created_at || '',
+        updatedAt: row.updated_at || '',
+        item: {
+          id: row.item_id,
+          title: row.item_title,
+          type: row.item_type,
+          externalId: null,
+          posterUrl: row.item_poster_url,
+          description: null,
+          releaseYear: row.item_release_year,
+          metadata: null,
+          createdAt: '',
+        },
+        profile: {
+          id: '',
+          username: '',
+          displayName: row.is_anonymous
+            ? (row.reviewer_pseudonym || 'Anonymous')
+            : (row.reviewer_name || 'Unknown'),
+          avatarUrl: null,
+          phoneHash: null,
+          email: '',
+          createdAt: '',
+          updatedAt: '',
+        },
+        depth: row.depth,
+        isAnonymous: row.is_anonymous,
+        displayName: row.is_anonymous
+          ? (row.reviewer_pseudonym || 'Anonymous')
+          : (row.reviewer_name || 'Unknown'),
+      }));
+
+    if (scope === 'network') {
+      return networkItemReviews;
+    }
+
+    // 2. Fetch public reviews for this item
+    const { data: publicData, error: publicError } = await supabase
+      .from('reviews')
+      .select(`
+        id,
+        user_id,
+        item_id,
+        rating,
+        comment,
+        link,
+        is_public,
+        sharing_level,
+        created_at,
+        updated_at,
+        item:items(*),
+        profile:profiles(*)
+      `)
+      .eq('item_id', itemId)
+      .eq('sharing_level', 4);
+
+    if (publicError) throw new Error(publicError.message);
+
+    const publicItemReviews = (publicData || []).map((row: any) => ({
+      id: row.id,
+      userId: row.user_id,
+      itemId: row.item_id,
+      rating: row.rating,
+      comment: row.comment,
+      link: row.link,
+      isPublic: row.is_public,
+      sharingLevel: row.sharing_level,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      item: {
+        id: row.item.id,
+        title: row.item.title,
+        type: row.item.type,
+        externalId: row.item.external_id,
+        posterUrl: row.item.poster_url,
+        description: row.item.description,
+        releaseYear: row.item.release_year,
+        metadata: row.item.metadata,
+        createdAt: row.item.created_at,
+      },
+      profile: {
+        id: row.profile?.id || '',
+        username: row.profile?.username || '',
+        displayName: row.profile?.display_name || 'Unknown',
+        avatarUrl: row.profile?.avatar_url || null,
+        phone: row.profile?.phone || null,
+        email: row.profile?.email || '',
+        friendTag: row.profile?.friend_tag || '',
+        createdAt: row.profile?.created_at || '',
+        updatedAt: row.profile?.updated_at || '',
+      },
+      depth: 3,
+      isAnonymous: false,
+      displayName: row.profile?.display_name || 'Unknown',
+    }));
+
+    // Merge and deduplicate
+    const mergedMap = new Map<string, FeedReview>();
+    networkItemReviews.forEach((r: FeedReview) => mergedMap.set(r.id, r));
+    publicItemReviews.forEach((r: FeedReview) => {
+      if (!mergedMap.has(r.id)) {
+        mergedMap.set(r.id, r);
+      }
+    });
+
+    return Array.from(mergedMap.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 
   // ---- Private Helpers ----

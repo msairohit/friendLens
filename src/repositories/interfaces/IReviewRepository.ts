@@ -47,4 +47,13 @@ export interface IReviewRepository {
     depth?: number,
     typeFilter?: string
   ): Promise<NetworkReview[]>;
+
+  /**
+   * Get all reviews for a specific item, filtered by scope (network vs global).
+   */
+  getItemReviewsDetail(
+    itemId: string,
+    userId: string,
+    scope: 'network' | 'global'
+  ): Promise<FeedReview[]>;
 }

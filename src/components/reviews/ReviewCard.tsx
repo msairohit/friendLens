@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import { useTheme, useStyles } from '../../stores/themeStore';
 import { Spacing, BorderRadius } from '../../constants/layout';
 import { Typography } from '../../constants/typography';
@@ -8,6 +8,7 @@ import { Avatar } from '../ui/Avatar';
 import { StarRating } from '../ui/StarRating';
 import { FeedReview } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 interface ReviewCardProps {
   review: FeedReview;
@@ -37,6 +38,7 @@ function formatRelativeTime(dateString: string): string {
 
 export function ReviewCard({ review }: ReviewCardProps) {
   const { colors } = useTheme();
+  const router = useRouter();
   
   const styles = useStyles((c) =>
     StyleSheet.create({
@@ -138,8 +140,10 @@ export function ReviewCard({ review }: ReviewCardProps) {
       case 1:
         return { label: 'Friend', color: colors.success, bg: 'rgba(0, 230, 118, 0.15)' };
       case 2:
-      default:
         return { label: "Friend's Friend", color: colors.accentEnd, bg: 'rgba(123, 104, 238, 0.15)' };
+      case 3:
+      default:
+        return { label: 'Global', color: colors.textSecondary, bg: 'rgba(255, 255, 255, 0.1)' };
     }
   };
 
@@ -184,7 +188,15 @@ export function ReviewCard({ review }: ReviewCardProps) {
       </View>
 
       {/* Item info (Movie/Show) */}
-      <View style={styles.itemContainer}>
+      <TouchableOpacity
+        style={styles.itemContainer}
+        activeOpacity={0.7}
+        onPress={() => {
+          if (review.itemId) {
+            router.push(`/item/${review.itemId}`);
+          }
+        }}
+      >
         {review.item.posterUrl ? (
           <Image source={{ uri: review.item.posterUrl }} style={styles.poster} />
         ) : (
@@ -204,7 +216,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
             </Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* Rating & Comment */}
       <View style={styles.ratingContainer}>

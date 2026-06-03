@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, FlatList, SafeAreaView, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTheme, useStyles } from '../../src/stores/themeStore';
 import { Typography } from '../../src/constants/typography';
 import { Spacing, BorderRadius } from '../../src/constants/layout';
@@ -21,6 +22,7 @@ const FILTER_CHIPS = [
 
 export default function SearchScreen() {
   const { user } = useAuthStore();
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [results, setResults] = useState<NetworkSearchResult[]>([]);
@@ -137,15 +139,24 @@ export default function SearchScreen() {
         }
         renderItem={({ item }) => (
           <View style={styles.resultGroup}>
-            <GlassCard style={styles.itemHeaderCard}>
-              <Text style={[Typography.bodyBold, styles.itemTitle]}>{item.item.title}</Text>
-              {item.averageRating && (
-                <View style={styles.ratingBadge}>
-                  <Text style={styles.ratingText}>★ {item.averageRating}/10</Text>
-                  <Text style={styles.reviewCountText}>({item.networkReviewCount} reviews)</Text>
-                </View>
-              )}
-            </GlassCard>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                if (item.item.id) {
+                  router.push(`/item/${item.item.id}`);
+                }
+              }}
+            >
+              <GlassCard style={styles.itemHeaderCard}>
+                <Text style={[Typography.bodyBold, styles.itemTitle]}>{item.item.title}</Text>
+                {item.averageRating && (
+                  <View style={styles.ratingBadge}>
+                    <Text style={styles.ratingText}>★ {item.averageRating}/10</Text>
+                    <Text style={styles.reviewCountText}>({item.networkReviewCount} reviews)</Text>
+                  </View>
+                )}
+              </GlassCard>
+            </TouchableOpacity>
             
             {/* List reviews for this item */}
             {item.reviews.map((rev) => (
@@ -154,7 +165,7 @@ export default function SearchScreen() {
                 review={{
                   id: rev.reviewId,
                   userId: '',
-                  itemId: '',
+                  itemId: item.item.id || '',
                   rating: rev.rating,
                   comment: rev.comment,
                   link: null,

@@ -7,6 +7,7 @@ export interface TMDbItem {
   releaseYear?: number;
   posterUrl?: string;
   description?: string;
+  rating?: number;
 }
 
 // In-memory caches to save API requests
@@ -25,6 +26,7 @@ const MOCK_ITEMS: TMDbItem[] = [
     releaseYear: 2010,
     posterUrl: 'https://image.tmdb.org/t/p/w500/o0xxnvXh5vJU5r4eHM1I4ccRi5q.jpg',
     description: 'Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets, is offered a chance to regain his old life as payment for a task considered to be impossible: "inception", the implantation of another person\'s idea into a target\'s subconscious.',
+    rating: 8.3,
   },
   {
     externalId: 'tmdb:series:1396',
@@ -33,6 +35,7 @@ const MOCK_ITEMS: TMDbItem[] = [
     releaseYear: 2008,
     posterUrl: 'https://image.tmdb.org/t/p/w500/ztkUQvmg16736eJvQ6of2Zqd64g.jpg',
     description: 'Walter White, a chemistry teacher, discovers he has cancer and decides to get into the meth-making business to repay his medical debts. His priorities begin to change when he partners with Jesse Pinkman.',
+    rating: 9.5,
   },
   {
     externalId: 'tmdb:movie:157336',
@@ -41,6 +44,7 @@ const MOCK_ITEMS: TMDbItem[] = [
     releaseYear: 2014,
     posterUrl: 'https://image.tmdb.org/t/p/w500/gEU2QvEOmfcFGlsjH2j2vFj6eJ5.jpg',
     description: 'The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.',
+    rating: 8.4,
   },
   {
     externalId: 'tmdb:movie:155',
@@ -49,6 +53,7 @@ const MOCK_ITEMS: TMDbItem[] = [
     releaseYear: 2008,
     posterUrl: 'https://image.tmdb.org/t/p/w500/qJ2tWw3YiO1NMLssgPo2mHZuV7C.jpg',
     description: 'Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets.',
+    rating: 9.0,
   },
   {
     externalId: 'tmdb:movie:603',
@@ -57,6 +62,7 @@ const MOCK_ITEMS: TMDbItem[] = [
     releaseYear: 1999,
     posterUrl: 'https://image.tmdb.org/t/p/w500/f89U3w7n07E592W7n7e6vzngHQg.jpg',
     description: 'Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth.',
+    rating: 8.7,
   },
   {
     externalId: 'tmdb:series:76479',
@@ -65,6 +71,7 @@ const MOCK_ITEMS: TMDbItem[] = [
     releaseYear: 2019,
     posterUrl: 'https://image.tmdb.org/t/p/w500/77n5Ur6sbJ02v1o4uc9u9EvI17v.jpg',
     description: 'A fun and irreverent take on what happens when superheroes—who are as popular as celebrities, as influential as politicians, and as revered as gods—abuse their superpowers rather than use them for good.',
+    rating: 8.7,
   },
   {
     externalId: 'tmdb:series:66732',
@@ -73,6 +80,7 @@ const MOCK_ITEMS: TMDbItem[] = [
     releaseYear: 2016,
     posterUrl: 'https://image.tmdb.org/t/p/w500/49WJfeN0mhmFBQHeeB01JjCklJu.jpg',
     description: 'When a young boy vanishes, a town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.',
+    rating: 8.6,
   },
 ];
 
@@ -131,6 +139,7 @@ export async function searchTMDb(query: string, type: 'movie' | 'series'): Promi
           releaseYear,
           posterUrl,
           description: item.overview || undefined,
+          rating: item.vote_average || undefined,
         };
 
         // Cache details proactively
@@ -157,8 +166,11 @@ export async function searchTMDb(query: string, type: 'movie' | 'series'): Promi
 /**
  * Gets details for a specific TMDb item.
  */
-export async function getTMDbDetails(externalId: string): Promise<TMDbItem | null> {
-  if (detailsCache.has(externalId)) {
+export async function getTMDbDetails(
+  externalId: string,
+  forceRefresh: boolean = false
+): Promise<TMDbItem | null> {
+  if (!forceRefresh && detailsCache.has(externalId)) {
     return detailsCache.get(externalId)!;
   }
 
@@ -200,6 +212,7 @@ export async function getTMDbDetails(externalId: string): Promise<TMDbItem | nul
       releaseYear,
       posterUrl,
       description: item.overview || undefined,
+      rating: item.vote_average || undefined,
     };
 
     detailsCache.set(externalId, tmdbItem);

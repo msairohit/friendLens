@@ -20,6 +20,7 @@ export interface PaginatedResult<T> {
 export interface FeedOptions extends PaginationOptions {
   typeFilter?: ItemType;
   depthFilter?: number; // 0 = own, 1 = friend, 2 = friend-of-friend
+  scope?: 'network' | 'global';
 }
 
 export interface SearchFilters {

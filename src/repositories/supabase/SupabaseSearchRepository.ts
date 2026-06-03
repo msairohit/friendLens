@@ -102,7 +102,7 @@ export class SupabaseSearchRepository implements ISearchRepository {
       if (!itemMap.has(key)) {
         itemMap.set(key, {
           item: {
-            id: '',
+            id: (row.item_id as string) || '',
             title: itemTitle,
             type: row.item_type as NetworkSearchResult['item']['type'],
             externalId: null,
