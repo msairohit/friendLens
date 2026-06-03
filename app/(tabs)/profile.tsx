@@ -12,6 +12,7 @@ import { ReviewCard } from '../../src/components/reviews/ReviewCard';
 import { LoadingScreen } from '../../src/components/common/LoadingScreen';
 import { GradientButton } from '../../src/components/ui/GradientButton';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuthStore();
@@ -45,7 +46,27 @@ export default function ProfileScreen() {
       },
       username: {
         color: c.textSecondary,
-        marginBottom: Spacing.xxs,
+      },
+      tagContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.xs,
+        marginBottom: Spacing.xs,
+        marginTop: Spacing.xxs,
+      },
+      copyBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 2,
+        borderRadius: BorderRadius.sm,
+        gap: 4,
+      },
+      tagText: {
+        color: c.accentStart,
+        fontSize: 12,
+        fontWeight: 'bold',
       },
       email: {
         color: c.textMuted,
@@ -212,7 +233,18 @@ export default function ProfileScreen() {
           <View style={styles.header}>
             <Avatar name={user.displayName || user.username} size="lg" style={styles.avatar} />
             <Text style={[Typography.h2, styles.displayName]}>{user.displayName}</Text>
-            <Text style={[Typography.body, styles.username]}>@{user.username}</Text>
+            <View style={styles.tagContainer}>
+              <Text style={[Typography.body, styles.username]}>@{user.username}</Text>
+              <Pressable onPress={async () => {
+                if (user.friendTag) {
+                  await require('expo-clipboard').setStringAsync(user.friendTag);
+                  alert('Friend tag copied!');
+                }
+              }} style={styles.copyBadge}>
+                <Text style={styles.tagText}>{user.friendTag}</Text>
+                <Ionicons name="copy-outline" size={12} color={colors.textMuted} />
+              </Pressable>
+            </View>
             <Text style={[Typography.caption, styles.email]}>{user.email}</Text>
 
             <View style={styles.statsContainer}>
@@ -220,12 +252,17 @@ export default function ProfileScreen() {
                 <Text style={[Typography.h3, styles.statValue]}>{reviews.length}</Text>
                 <Text style={[Typography.caption, styles.statLabel]}>Reviews</Text>
               </View>
-              <View style={styles.statBox}>
+              <Pressable
+                onPress={() => require('expo-router').router.push('/friends')}
+                style={styles.statBox}
+              >
                 <Text style={[Typography.h3, styles.statValue]}>
                   {user.username === 'user2' ? '2' : '1'}
                 </Text>
-                <Text style={[Typography.caption, styles.statLabel]}>Friends</Text>
-              </View>
+                <Text style={[Typography.caption, styles.statLabel, { color: colors.accentStart }]}>
+                  Friends →
+                </Text>
+              </Pressable>
             </View>
 
             {/* Theme Picker section */}

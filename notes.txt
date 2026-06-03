@@ -1,11 +1,17 @@
+https://www.themoviedb.org/settings/api
+https://github.com/msairohit/friendLens/actions/workflows/supabase-keep-alive.yml
+https://supabase.com/dashboard/project/nglruuzhsiqazdkqglih
+
 TMDb API Reference fields and sample responses have been saved to tmdb_api_reference.md!
 filters in network tab
-need to add gitlab actions like we did for shopgrid app to keep this project active in supabase.
+(done)need to add gitlab actions like we did for shopgrid app to keep this project active in supabase.
 Add proper readme file
 In add review page, show the image properly in some big size after selecting from tmdb.
-ability to view friends.
-ability to send friend requests based on id and from contacts as well.
-show requested if not yet approved when trying to request again.
+(done)ability to view friends.
+(done)ability to send friend requests based on id and from contacts as well.
+(done)show requested if not yet approved when trying to request again.
+send notification inapp and system when someone sends friend request and sender gets notified as well when they accept or reject.
+in profile page the friends count is not updated but in connections page it is updated.
 (not priority)Upon clicking any review, can open review detail page with maximized details like links, or extra details and big image etc.
 what is the logic when one movie has reviews from others which are not his friends then we will not show the reviews right? but if yes then but we also have public sharing right, those should be visible and the users can have option to toggle to see within network(then they can see only friends reviews ) but when they toggle for global then they can see others who shared publicly so that this app also works as general rating app as well. 
 We can add a toggle switch or segment control (e.g., "My Network" vs. "Global") on the feed and item detail pages to let the user switch between these views. Let me know if you would like me to help implement this toggle/global view functionality next!

@@ -44,8 +44,9 @@ export interface Profile {
   username: string;
   displayName: string;
   avatarUrl: string | null;
-  phoneHash: string | null;
+  phone: string | null;
   email: string;
+  friendTag: string; // e.g. 'john#4829'
   createdAt: string;
   updatedAt: string;
 }

@@ -24,17 +24,23 @@ export interface IConnectionRepository {
   getFriends(userId: string): Promise<Profile[]>;
 
   /** Get pending friend requests received by a user */
-  getPendingRequests(userId: string): Promise<Connection[]>;
+  getPendingRequests(userId: string): Promise<(Connection & { requester: Profile })[]>;
 
   /** Get sent friend requests that are still pending */
-  getSentRequests(userId: string): Promise<Connection[]>;
+  getSentRequests(userId: string): Promise<(Connection & { addressee: Profile })[]>;
 
-  /** Find registered users from a list of hashed phone numbers (contact discovery) */
-  findUsersFromContacts(phoneHashes: string[]): Promise<Profile[]>;
+  /** Find registered users from a list of phone numbers (contact discovery) */
+  findUsersFromContacts(phones: string[]): Promise<Profile[]>;
 
   /** Get the connection between two users, if any */
   getConnectionBetween(
     userIdA: string,
     userIdB: string
   ): Promise<Connection | null>;
+
+  /** Search for a user by exact friend tag (e.g. 'john#4829') */
+  searchByFriendTag(tag: string): Promise<Profile | null>;
+
+  /** Search users by username prefix, excluding the current user */
+  searchUsersByUsername(query: string, currentUserId: string): Promise<Profile[]>;
 }

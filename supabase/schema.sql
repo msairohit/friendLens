@@ -6,11 +6,12 @@
 -- ---- Profiles ----
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  username TEXT UNIQUE NOT NULL,
+  username TEXT NOT NULL,
   display_name TEXT NOT NULL DEFAULT '',
   avatar_url TEXT,
-  phone_hash TEXT,
+  phone TEXT,
   email TEXT,
+  friend_tag TEXT UNIQUE NOT NULL,  -- e.g. 'john#4829', generated at signup
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

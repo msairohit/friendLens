@@ -16,14 +16,18 @@ export class SupabaseAuthRepository implements IAuthRepository {
 
     let profile: Profile | null = null;
     if (data.user) {
+      const username = email.split('@')[0]; // default username
+      const friendTag = await this.generateFriendTag(username);
+
       // Create a profile row for the new user
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: data.user.id,
           email: data.user.email,
-          username: email.split('@')[0], // default username
-          display_name: email.split('@')[0],
+          username,
+          display_name: username,
+          friend_tag: friendTag,
         })
         .select()
         .single();
@@ -113,7 +117,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
     if (data.username !== undefined) updateData.username = data.username;
     if (data.displayName !== undefined) updateData.display_name = data.displayName;
     if (data.avatarUrl !== undefined) updateData.avatar_url = data.avatarUrl;
-    if (data.phoneHash !== undefined) updateData.phone_hash = data.phoneHash;
+    if (data.phone !== undefined) updateData.phone = data.phone;
     updateData.updated_at = new Date().toISOString();
 
     const { data: result, error } = await supabase
@@ -128,6 +132,32 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   // ---- Private Helpers ----
+
+  /**
+   * Generate a unique friend tag in the format: username#XXXX
+   * Uses simple random with retry on collision.
+   */
+  private async generateFriendTag(username: string, maxRetries = 5): Promise<string> {
+    for (let i = 0; i < maxRetries; i++) {
+      const suffix = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      const tag = `${username}#${suffix}`;
+
+      // Check if this tag already exists
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('friend_tag', tag)
+        .limit(1);
+
+      if (!data || data.length === 0) {
+        return tag; // No collision, use this tag
+      }
+    }
+
+    // Fallback: use timestamp-based suffix if all retries fail
+    const fallbackSuffix = String(Date.now() % 100000).padStart(5, '0');
+    return `${username}#${fallbackSuffix}`;
+  }
 
   private async getProfileById(id: string): Promise<Profile | null> {
     const { data, error } = await supabase
@@ -146,8 +176,9 @@ export class SupabaseAuthRepository implements IAuthRepository {
       username: row.username as string,
       displayName: (row.display_name as string) || '',
       avatarUrl: (row.avatar_url as string) || null,
-      phoneHash: (row.phone_hash as string) || null,
+      phone: (row.phone as string) || null,
       email: (row.email as string) || '',
+      friendTag: (row.friend_tag as string) || '',
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
     };

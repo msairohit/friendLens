@@ -96,40 +96,70 @@ export class SupabaseConnectionRepository implements IConnectionRepository {
     });
   }
 
-  async getPendingRequests(userId: string): Promise<Connection[]> {
+  async getPendingRequests(userId: string): Promise<(Connection & { requester: Profile })[]> {
     const { data, error } = await supabase
       .from('connections')
-      .select('*')
+      .select(`
+        *,
+        requester:profiles!connections_requester_id_fkey(*)
+      `)
       .eq('addressee_id', userId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
-    return (data || []).map(this.mapConnection);
+    return (data || []).map((row: any) => ({
+      ...this.mapConnection(row),
+      requester: this.mapProfile(row.requester)
+    }));
   }
 
-  async getSentRequests(userId: string): Promise<Connection[]> {
+  async getSentRequests(userId: string): Promise<(Connection & { addressee: Profile })[]> {
     const { data, error } = await supabase
       .from('connections')
-      .select('*')
+      .select(`
+        *,
+        addressee:profiles!connections_addressee_id_fkey(*)
+      `)
       .eq('requester_id', userId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
-    return (data || []).map(this.mapConnection);
+    return (data || []).map((row: any) => ({
+      ...this.mapConnection(row),
+      addressee: this.mapProfile(row.addressee)
+    }));
   }
 
-  async findUsersFromContacts(phoneHashes: string[]): Promise<Profile[]> {
-    if (phoneHashes.length === 0) return [];
+  async findUsersFromContacts(phones: string[]): Promise<Profile[]> {
+    if (phones.length === 0) return [];
 
+    // Clean and get last 10 digits of input phone numbers
+    const searchLast10 = phones.map(p => {
+      const clean = p.replace(/[^\d]/g, '');
+      return clean.length >= 10 ? clean.slice(-10) : clean;
+    }).filter(p => p.length >= 7); // minimum digits for a phone number
+
+    if (searchLast10.length === 0) return [];
+
+    // Fetch all profiles that have a phone number
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .in('phone_hash', phoneHashes);
+      .not('phone', 'is', null);
 
     if (error) throw new Error(error.message);
-    return (data || []).map(this.mapProfile);
+
+    // Filter in-memory by comparing the last 10 digits of the profile's phone
+    const matched = (data || []).filter((profile: any) => {
+      if (!profile.phone) return false;
+      const profileClean = profile.phone.replace(/[^\d]/g, '');
+      const profileLast10 = profileClean.length >= 10 ? profileClean.slice(-10) : profileClean;
+      return searchLast10.includes(profileLast10);
+    });
+
+    return matched.map(this.mapProfile);
   }
 
   async getConnectionBetween(
@@ -147,6 +177,32 @@ export class SupabaseConnectionRepository implements IConnectionRepository {
 
     if (error || !data) return null;
     return this.mapConnection(data);
+  }
+
+  async searchByFriendTag(tag: string): Promise<Profile | null> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('friend_tag', tag.toLowerCase())
+      .limit(1)
+      .single();
+
+    if (error || !data) return null;
+    return this.mapProfile(data);
+  }
+
+  async searchUsersByUsername(query: string, currentUserId: string): Promise<Profile[]> {
+    if (!query.trim()) return [];
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .ilike('username', `${query}%`)
+      .neq('id', currentUserId)
+      .limit(20);
+
+    if (error) throw new Error(error.message);
+    return (data || []).map(this.mapProfile);
   }
 
   // ---- Private Helpers ----
@@ -168,8 +224,9 @@ export class SupabaseConnectionRepository implements IConnectionRepository {
       username: row.username as string,
       displayName: (row.display_name as string) || '',
       avatarUrl: (row.avatar_url as string) || null,
-      phoneHash: (row.phone_hash as string) || null,
+      phone: (row.phone as string) || null,
       email: (row.email as string) || '',
+      friendTag: (row.friend_tag as string) || '',
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
     };
