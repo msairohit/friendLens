@@ -206,40 +206,46 @@ export default function AddReviewScreen() {
       },
       selectedCard: {
         flexDirection: 'row',
-        padding: Spacing.sm,
+        padding: Spacing.md,
         backgroundColor: 'rgba(108, 92, 231, 0.05)',
         borderColor: c.primary,
         borderWidth: 1,
         borderRadius: BorderRadius.md,
-        alignItems: 'center',
+        alignItems: 'flex-start',
         marginTop: Spacing.xs,
+        position: 'relative',
       },
       selectedPoster: {
-        width: 50,
-        height: 75,
-        borderRadius: BorderRadius.sm,
+        width: 100,
+        height: 150,
+        borderRadius: BorderRadius.md,
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
       },
       selectedInfo: {
         flex: 1,
         marginLeft: Spacing.md,
+        paddingRight: Spacing.md,
       },
       selectedTitle: {
         color: c.textPrimary,
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: 'bold',
       },
       selectedYear: {
         color: c.textSecondary,
-        fontSize: 12,
+        fontSize: 13,
         marginTop: 2,
       },
       selectedDesc: {
         color: c.textMuted,
-        fontSize: 11,
-        marginTop: 4,
+        fontSize: 12,
+        marginTop: 6,
+        lineHeight: 16,
       },
       clearButton: {
+        position: 'absolute',
+        top: Spacing.xs,
+        right: Spacing.xs,
         padding: Spacing.xs,
       },
     })
@@ -346,12 +352,12 @@ export default function AddReviewScreen() {
                   <View style={styles.selectedPoster} />
                 )}
                 <View style={styles.selectedInfo}>
-                  <Text style={styles.selectedTitle} numberOfLines={1}>{selectedMovie.title}</Text>
+                  <Text style={styles.selectedTitle} numberOfLines={2}>{selectedMovie.title}</Text>
                   {selectedMovie.releaseYear && (
                     <Text style={styles.selectedYear}>{selectedMovie.releaseYear}</Text>
                   )}
                   {selectedMovie.description && (
-                    <Text style={styles.selectedDesc} numberOfLines={2}>{selectedMovie.description}</Text>
+                    <Text style={styles.selectedDesc} numberOfLines={5}>{selectedMovie.description}</Text>
                   )}
                 </View>
                 <Pressable onPress={() => setSelectedMovie(null)} style={styles.clearButton}>

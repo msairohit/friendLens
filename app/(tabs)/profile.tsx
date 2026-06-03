@@ -13,12 +13,15 @@ import { LoadingScreen } from '../../src/components/common/LoadingScreen';
 import { GradientButton } from '../../src/components/ui/GradientButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuthStore();
   const [reviews, setReviews] = useState<FeedReview[]>([]);
+  const [friendsCount, setFriendsCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const { theme: activeTheme, setTheme, colors } = useTheme();
 
   const styles = useStyles((c: ThemeColors) =>
@@ -192,6 +195,13 @@ export default function ProfileScreen() {
       }));
       
       setReviews(resolved);
+
+      try {
+        const friendsList = await repositories.connections.getFriends(user.id);
+        setFriendsCount(friendsList.length);
+      } catch (err) {
+        console.warn('Could not resolve friends count:', err);
+      }
     } catch (e) {
       console.error('Error fetching profile reviews:', e);
     } finally {
@@ -200,9 +210,12 @@ export default function ProfileScreen() {
     }
   }, [user]);
 
-  useEffect(() => {
-    fetchUserReviews();
-  }, [fetchUserReviews]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserReviews(!hasLoadedOnce);
+      setHasLoadedOnce(true);
+    }, [fetchUserReviews, hasLoadedOnce])
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -256,9 +269,7 @@ export default function ProfileScreen() {
                 onPress={() => require('expo-router').router.push('/friends')}
                 style={styles.statBox}
               >
-                <Text style={[Typography.h3, styles.statValue]}>
-                  {user.username === 'user2' ? '2' : '1'}
-                </Text>
+                <Text style={[Typography.h3, styles.statValue]}>{friendsCount}</Text>
                 <Text style={[Typography.caption, styles.statLabel, { color: colors.accentStart }]}>
                   Friends →
                 </Text>

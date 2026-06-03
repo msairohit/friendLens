@@ -81,6 +81,9 @@ const MOCK_ITEMS: TMDbItem[] = [
  * Falls back to local mock data if no API key is configured.
  */
 export async function searchTMDb(query: string, type: 'movie' | 'series'): Promise<TMDbItem[]> {
+  if (type !== 'movie' && type !== 'series') {
+    return [];
+  }
   if (!query.trim()) return [];
 
   const cacheKey = `${type}:${query.toLowerCase().trim()}`;

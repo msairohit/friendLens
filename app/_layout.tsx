@@ -65,11 +65,17 @@ function RootLayoutNav() {
     if (!initialized) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const isOnboarding = segments[1] === 'onboarding';
+    const isRegister = segments[1] === 'register';
 
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
-      router.replace('/(tabs)');
+      if (isRegister) {
+        router.replace('/(auth)/onboarding');
+      } else if (!isOnboarding) {
+        router.replace('/(tabs)');
+      }
     }
   }, [user, initialized, segments]);
 
