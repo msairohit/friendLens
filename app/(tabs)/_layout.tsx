@@ -1,12 +1,41 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/stores/themeStore';
 import { FontFamily } from '../../src/constants/typography';
-import { Platform } from 'react-native';
+import { Platform, TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { useNotificationStore } from '../../src/stores/notificationStore';
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const router = useRouter();
+  const { unreadCount } = useNotificationStore();
+
+  const styles = StyleSheet.create({
+    bellContainer: {
+      marginRight: 16,
+      position: 'relative',
+      padding: 4,
+    },
+    badge: {
+      position: 'absolute',
+      right: 0,
+      top: 0,
+      backgroundColor: colors.accentStart,
+      borderRadius: 8,
+      minWidth: 16,
+      height: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 2,
+    },
+    badgeText: {
+      color: '#FFFFFF',
+      fontSize: 9,
+      fontWeight: 'bold',
+      textAlign: 'center',
+    },
+  });
 
   return (
     <Tabs
@@ -51,6 +80,26 @@ export default function TabLayout() {
               size={24}
               color={color}
             />
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => router.push('/notifications')}
+              style={styles.bellContainer}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color={colors.textPrimary}
+              />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
           ),
         }}
       />

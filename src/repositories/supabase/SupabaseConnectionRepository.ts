@@ -19,10 +19,32 @@ export class SupabaseConnectionRepository implements IConnectionRepository {
       .single();
 
     if (error) throw new Error(error.message);
+
+    // Create a notification for the recipient
+    try {
+      await supabase.from('notifications').insert({
+        user_id: addresseeId,
+        sender_id: requesterId,
+        type: 'friend_request',
+        is_read: false,
+      });
+    } catch (err) {
+      console.error('Failed to create friend_request notification:', err);
+    }
+
     return this.mapConnection(data);
   }
 
   async acceptRequest(connectionId: string): Promise<Connection> {
+    // Get connection details first to know the requester
+    const { data: conn, error: getErr } = await supabase
+      .from('connections')
+      .select('*')
+      .eq('id', connectionId)
+      .single();
+
+    if (getErr) throw new Error(getErr.message);
+
     const { data, error } = await supabase
       .from('connections')
       .update({ status: 'accepted', updated_at: new Date().toISOString() })
@@ -31,16 +53,50 @@ export class SupabaseConnectionRepository implements IConnectionRepository {
       .single();
 
     if (error) throw new Error(error.message);
+
+    // Create notification for requester (sender) that B accepted it
+    try {
+      await supabase.from('notifications').insert({
+        user_id: conn.requester_id,
+        sender_id: conn.addressee_id,
+        type: 'request_accepted',
+        is_read: false,
+      });
+    } catch (err) {
+      console.error('Failed to create request_accepted notification:', err);
+    }
+
     return this.mapConnection(data);
   }
 
   async rejectRequest(connectionId: string): Promise<void> {
+    // Get connection details first to know the requester
+    const { data: conn, error: getErr } = await supabase
+      .from('connections')
+      .select('*')
+      .eq('id', connectionId)
+      .single();
+
+    if (getErr) throw new Error(getErr.message);
+
     const { error } = await supabase
       .from('connections')
       .delete()
       .eq('id', connectionId);
 
     if (error) throw new Error(error.message);
+
+    // Create notification for requester (sender) that B rejected it
+    try {
+      await supabase.from('notifications').insert({
+        user_id: conn.requester_id,
+        sender_id: conn.addressee_id,
+        type: 'request_rejected',
+        is_read: false,
+      });
+    } catch (err) {
+      console.error('Failed to create request_rejected notification:', err);
+    }
   }
 
   async blockUser(userId: string, blockedId: string): Promise<void> {

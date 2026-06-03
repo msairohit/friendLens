@@ -96,6 +96,21 @@ export interface SharingPermission {
   updatedAt: string;
 }
 
+export type NotificationType = 'friend_request' | 'request_accepted' | 'request_rejected';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  senderId: string;
+  type: NotificationType;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface NotificationWithSender extends Notification {
+  sender: Profile;
+}
+
 export interface ReviewComment {
   id: string;
   reviewId: string;

@@ -53,6 +53,7 @@ export default function RootLayout() {
 }
 
 import { useTheme } from '../src/stores/themeStore';
+import { useNotificationStore } from '../src/stores/notificationStore';
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
@@ -60,6 +61,19 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
   const { colors } = useTheme();
+  
+  const { fetchNotifications, setupRealtimeSubscription } = useNotificationStore();
+
+  useEffect(() => {
+    if (!user) return;
+
+    fetchNotifications(user.id);
+    const unsubscribe = setupRealtimeSubscription(user.id);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!initialized) return;
@@ -110,6 +124,7 @@ function RootLayoutNav() {
         <Stack.Screen name="friends/add-friend" options={{ title: 'Add Friend', headerBackTitle: 'Back' }} />
         <Stack.Screen name="friends/discover" options={{ title: 'Scan Contacts', headerBackTitle: 'Back' }} />
         <Stack.Screen name="item/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="notifications" options={{ title: 'Notifications', presentation: 'modal' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>

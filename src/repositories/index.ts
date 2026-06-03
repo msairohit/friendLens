@@ -11,6 +11,7 @@ import { IItemRepository } from './interfaces/IItemRepository';
 import { IConnectionRepository } from './interfaces/IConnectionRepository';
 import { ISearchRepository } from './interfaces/ISearchRepository';
 import { ISharingRepository } from './interfaces/ISharingRepository';
+import { INotificationRepository } from './interfaces/INotificationRepository';
 
 import { SupabaseAuthRepository } from './supabase/SupabaseAuthRepository';
 import { SupabaseReviewRepository } from './supabase/SupabaseReviewRepository';
@@ -18,6 +19,7 @@ import { SupabaseItemRepository } from './supabase/SupabaseItemRepository';
 import { SupabaseConnectionRepository } from './supabase/SupabaseConnectionRepository';
 import { SupabaseSearchRepository } from './supabase/SupabaseSearchRepository';
 import { SupabaseSharingRepository } from './supabase/SupabaseSharingRepository';
+import { SupabaseNotificationRepository } from './supabase/SupabaseNotificationRepository';
 
 export interface Repositories {
   auth: IAuthRepository;
@@ -26,6 +28,7 @@ export interface Repositories {
   connections: IConnectionRepository;
   search: ISearchRepository;
   sharing: ISharingRepository;
+  notifications: INotificationRepository;
 }
 
 // ---- Current Implementation: Supabase ----
@@ -49,4 +52,5 @@ export const repositories: Repositories = {
   connections: new SupabaseConnectionRepository(),
   search: new SupabaseSearchRepository(),
   sharing: new SupabaseSharingRepository(),
+  notifications: new SupabaseNotificationRepository(),
 };
