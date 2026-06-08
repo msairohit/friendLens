@@ -232,37 +232,33 @@ export default function DiscoverFriendsScreen() {
   );
 
   const handleRequestPermission = async () => {
-    const granted = await requestContactsPermission();
-    setHasPermission(granted);
-    if (!granted) {
-      Alert.alert(
-        'Permission Needed',
-        'FriendLens needs access to your contacts to find friends who are already using the app. You can enable this in Settings.',
-      );
-    }
+    Alert.alert(
+      'Access Contacts',
+      'FriendLens scans your contact phone numbers to find your friends on the platform. Your contact list is checked securely and is never stored, shared, or sold.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => setHasPermission(false),
+        },
+        {
+          text: 'Agree',
+          onPress: async () => {
+            const granted = await requestContactsPermission();
+            setHasPermission(granted);
+            if (!granted) {
+              Alert.alert(
+                'Permission Needed',
+                'FriendLens needs access to your contacts to find friends who are already using the app. You can enable this in Settings.',
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
-  const handleScanContacts = async () => {
-    if (!user) return;
-
-    // Check/request permission first
-    let permGranted = hasPermission;
-    if (permGranted === null) {
-      permGranted = await checkContactsPermission();
-      if (!permGranted) {
-        permGranted = await requestContactsPermission();
-      }
-      setHasPermission(permGranted);
-    }
-
-    if (!permGranted) {
-      Alert.alert(
-        'Permission Needed',
-        'Please grant contacts permission to discover friends.',
-      );
-      return;
-    }
-
+  const performScan = async () => {
     setScanning(true);
     setResults([]);
     try {
@@ -278,7 +274,7 @@ export default function DiscoverFriendsScreen() {
       const matchedProfiles = await repositories.connections.findUsersFromContacts(phones);
 
       // Exclude current user from results
-      const filtered = matchedProfiles.filter((p) => p.id !== user.id);
+      const filtered = matchedProfiles.filter((p) => p.id !== user!.id);
 
       // Build a map of last 10 digits -> Contact Name
       const phoneToNameMap = new Map<string, string>();
@@ -292,7 +288,7 @@ export default function DiscoverFriendsScreen() {
       const withStatus: ContactResult[] = await Promise.all(
         filtered.map(async (profile) => {
           const connection = await repositories.connections.getConnectionBetween(
-            user.id,
+            user!.id,
             profile.id
           );
 
@@ -314,6 +310,48 @@ export default function DiscoverFriendsScreen() {
       Alert.alert('Error', 'Failed to scan contacts. Please try again.');
     } finally {
       setScanning(false);
+    }
+  };
+
+  const handleScanContacts = async () => {
+    if (!user) return;
+
+    // Check permission status first
+    const permGranted = await checkContactsPermission();
+    setHasPermission(permGranted);
+
+    if (permGranted) {
+      await performScan();
+    } else {
+      // Show prominent disclosure before requesting
+      Alert.alert(
+        'Find Friends from Contacts',
+        'FriendLens scans your contact list to identify other users you know. This data is handled securely, and contacts are never stored on our servers or shared.',
+        [
+          {
+            text: 'Not Now',
+            style: 'cancel',
+            onPress: () => {
+              setHasPermission(false);
+            },
+          },
+          {
+            text: 'Agree & Scan',
+            onPress: async () => {
+              const granted = await requestContactsPermission();
+              setHasPermission(granted);
+              if (granted) {
+                await performScan();
+              } else {
+                Alert.alert(
+                  'Permission Needed',
+                  'Please grant contacts permission to discover friends.',
+                );
+              }
+            },
+          },
+        ]
+      );
     }
   };
 
