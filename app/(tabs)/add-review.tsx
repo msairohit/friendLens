@@ -46,6 +46,36 @@ export default function AddReviewScreen() {
   const [searchResults, setSearchResults] = useState<TMDbItem[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  // Liked/Disliked states
+  const [liked, setLiked] = useState<string[]>([]);
+  const [disliked, setDisliked] = useState<string[]>([]);
+  const [newLiked, setNewLiked] = useState('');
+  const [newDisliked, setNewDisliked] = useState('');
+
+  const addLikedTag = () => {
+    const tag = newLiked.trim();
+    if (tag && !liked.includes(tag)) {
+      setLiked([...liked, tag]);
+    }
+    setNewLiked('');
+  };
+
+  const removeLikedTag = (tag: string) => {
+    setLiked(liked.filter((t) => t !== tag));
+  };
+
+  const addDislikedTag = () => {
+    const tag = newDisliked.trim();
+    if (tag && !disliked.includes(tag)) {
+      setDisliked([...disliked, tag]);
+    }
+    setNewDisliked('');
+  };
+
+  const removeDislikedTag = (tag: string) => {
+    setDisliked(disliked.filter((t) => t !== tag));
+  };
+
   // Clear suggestions and selected movie when category changes
   const handleTypeChange = (newType: string) => {
     setType(newType);
@@ -248,6 +278,45 @@ export default function AddReviewScreen() {
         right: Spacing.xs,
         padding: Spacing.xs,
       },
+      tagInputWrapper: {
+        flexDirection: 'row',
+        gap: Spacing.sm,
+        alignItems: 'center',
+      },
+      tagInput: {
+        flex: 1,
+      },
+      tagAddButton: {
+        backgroundColor: c.primary,
+        borderRadius: BorderRadius.md,
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      tagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: Spacing.xs,
+        marginTop: Spacing.xs,
+        marginBottom: Spacing.sm,
+      },
+      tagChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderRadius: BorderRadius.sm,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 4,
+        gap: 6,
+      },
+      tagText: {
+        fontSize: 13,
+        fontWeight: '600',
+      },
+      tagRemoveButton: {
+        padding: 2,
+      },
     })
   );
 
@@ -293,6 +362,8 @@ export default function AddReviewScreen() {
         link: link.trim() || undefined,
         isPublic: sharingLevel === 4,
         sharingLevel,
+        liked,
+        disliked,
       });
 
       Alert.alert('Success', 'Your review has been posted!', [
@@ -308,6 +379,10 @@ export default function AddReviewScreen() {
             setLink('');
             setRating(7);
             setSharingLevel(1);
+            setLiked([]);
+            setDisliked([]);
+            setNewLiked('');
+            setNewDisliked('');
             router.push('/(tabs)');
           },
         },
@@ -418,6 +493,63 @@ export default function AddReviewScreen() {
               multiline
               numberOfLines={4}
             />
+
+            {/* Liked Tags Section */}
+            <Text style={[Typography.h3, styles.label]}>What did you LIKE? (Optional)</Text>
+            <View style={styles.tagInputWrapper}>
+              <TextInput
+                value={newLiked}
+                onChangeText={setNewLiked}
+                placeholder="Type a highlight (e.g. Philosophy) and tap +"
+                placeholderTextColor={colors.textMuted}
+                style={[styles.input, styles.tagInput]}
+                onSubmitEditing={addLikedTag}
+              />
+              <Pressable onPress={addLikedTag} style={styles.tagAddButton}>
+                <Ionicons name="add" size={24} color="#FFF" />
+              </Pressable>
+            </View>
+            {liked.length > 0 && (
+              <View style={styles.tagsContainer}>
+                {liked.map((tag) => (
+                  <View key={tag} style={[styles.tagChip, { borderColor: colors.success + '40', backgroundColor: colors.success + '10' }]}>
+                    <Text style={[styles.tagText, { color: colors.success }]}>✓ {tag}</Text>
+                    <Pressable onPress={() => removeLikedTag(tag)} style={styles.tagRemoveButton}>
+                      <Ionicons name="close" size={14} color={colors.success} />
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Disliked Tags Section */}
+            <Text style={[Typography.h3, styles.label]}>What did you DISLIKE? (Optional)</Text>
+            <View style={styles.tagInputWrapper}>
+              <TextInput
+                value={newDisliked}
+                onChangeText={setNewDisliked}
+                placeholder="Type a downside (e.g. Slow first hour) and tap +"
+                placeholderTextColor={colors.textMuted}
+                style={[styles.input, styles.tagInput]}
+                onSubmitEditing={addDislikedTag}
+              />
+              <Pressable onPress={addDislikedTag} style={styles.tagAddButton}>
+                <Ionicons name="add" size={24} color="#FFF" />
+              </Pressable>
+            </View>
+            {disliked.length > 0 && (
+              <View style={styles.tagsContainer}>
+                {disliked.map((tag) => (
+                  <View key={tag} style={[styles.tagChip, { borderColor: colors.error + '40', backgroundColor: colors.error + '10' }]}>
+                    <Text style={[styles.tagText, { color: colors.error }]}>✗ {tag}</Text>
+                    <Pressable onPress={() => removeDislikedTag(tag)} style={styles.tagRemoveButton}>
+                      <Ionicons name="close" size={14} color={colors.error} />
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            )}
+
 
             <Text style={[Typography.h3, styles.label]}>URL / Link (Optional)</Text>
             <TextInput

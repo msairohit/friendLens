@@ -26,6 +26,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
         link: review.link || null,
         is_public: review.isPublic ?? false,
         sharing_level: review.sharingLevel ?? (review.isPublic ? 4 : 1),
+        liked: review.liked || [],
+        disliked: review.disliked || [],
       })
       .select()
       .single();
@@ -46,6 +48,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
       }
     }
     if (data.sharingLevel !== undefined) updateData.sharing_level = data.sharingLevel;
+    if (data.liked !== undefined) updateData.liked = data.liked;
+    if (data.disliked !== undefined) updateData.disliked = data.disliked;
 
     const { data: result, error } = await supabase
       .from('reviews')
@@ -146,6 +150,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
       link: null,
       isPublic: true,
       sharingLevel: (row.sharing_level as number) ?? 1,
+      liked: (row.liked as string[]) || [],
+      disliked: (row.disliked as string[]) || [],
       createdAt: (row.created_at as string) || '',
       updatedAt: (row.updated_at as string) || '',
       item: {
@@ -193,6 +199,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
           link,
           is_public,
           sharing_level,
+          liked,
+          disliked,
           created_at,
           updated_at,
           item:items!inner(id, title, type, external_id, poster_url, description, release_year, metadata, created_at),
@@ -216,6 +224,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
         link: row.link,
         isPublic: row.is_public,
         sharingLevel: row.sharing_level,
+        liked: row.liked || [],
+        disliked: row.disliked || [],
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         item: {
@@ -293,6 +303,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
       rating: row.rating as number,
       comment: (row.comment as string) || null,
       depth: row.depth as number,
+      liked: (row.liked as string[]) || [],
+      disliked: (row.disliked as string[]) || [],
     }));
   }
 
@@ -319,6 +331,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
         link: null,
         isPublic: true,
         sharingLevel: row.sharing_level ?? 1,
+        liked: (row.liked as string[]) || [],
+        disliked: (row.disliked as string[]) || [],
         createdAt: row.created_at || '',
         updatedAt: row.updated_at || '',
         item: {
@@ -367,6 +381,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
         link,
         is_public,
         sharing_level,
+        liked,
+        disliked,
         created_at,
         updated_at,
         item:items(*),
@@ -386,6 +402,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
       link: row.link,
       isPublic: row.is_public,
       sharingLevel: row.sharing_level,
+      liked: row.liked || [],
+      disliked: row.disliked || [],
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       item: {
@@ -441,6 +459,8 @@ export class SupabaseReviewRepository implements IReviewRepository {
       link: (row.link as string) || null,
       isPublic: row.is_public as boolean,
       sharingLevel: (row.sharing_level as number) ?? (row.is_public ? 4 : 1),
+      liked: (row.liked as string[]) || [],
+      disliked: (row.disliked as string[]) || [],
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
     };

@@ -130,6 +130,40 @@ export function ReviewCard({ review }: ReviewCardProps) {
         fontStyle: 'italic',
         marginTop: Spacing.xxs,
       },
+      tagsSection: {
+        marginTop: Spacing.sm,
+        gap: Spacing.sm,
+        borderTopWidth: 1,
+        borderTopColor: c.divider,
+        paddingTop: Spacing.sm,
+      },
+      tagGroup: {
+        flexDirection: 'column',
+        gap: Spacing.xxs,
+      },
+      tagGroupLabel: {
+        color: c.textMuted,
+        fontSize: 11,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+      },
+      tagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: Spacing.xs,
+        marginTop: 2,
+      },
+      tagChip: {
+        borderWidth: 1,
+        borderRadius: BorderRadius.sm,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 3,
+      },
+      tagText: {
+        fontSize: 12,
+        fontWeight: '600',
+      },
     })
   );
 
@@ -228,6 +262,37 @@ export function ReviewCard({ review }: ReviewCardProps) {
         <Text style={[Typography.body, styles.comment]}>
           "{review.comment}"
         </Text>
+      )}
+
+      {/* Liked / Disliked Tags */}
+      {((review.liked && review.liked.length > 0) || (review.disliked && review.disliked.length > 0)) && (
+        <View style={styles.tagsSection}>
+          {review.liked && review.liked.length > 0 && (
+            <View style={styles.tagGroup}>
+              <Text style={styles.tagGroupLabel}>Liked:</Text>
+              <View style={styles.tagsContainer}>
+                {review.liked.map((tag, idx) => (
+                  <View key={`liked-${idx}`} style={[styles.tagChip, { borderColor: colors.success + '30', backgroundColor: colors.success + '08' }]}>
+                    <Text style={[styles.tagText, { color: colors.success }]}>✓ {tag}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {review.disliked && review.disliked.length > 0 && (
+            <View style={styles.tagGroup}>
+              <Text style={styles.tagGroupLabel}>Disliked:</Text>
+              <View style={styles.tagsContainer}>
+                {review.disliked.map((tag, idx) => (
+                  <View key={`disliked-${idx}`} style={[styles.tagChip, { borderColor: colors.error + '30', backgroundColor: colors.error + '08' }]}>
+                    <Text style={[styles.tagText, { color: colors.error }]}>✗ {tag}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
       )}
     </GlassCard>
   );

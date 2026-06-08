@@ -73,6 +73,8 @@ export interface Review {
   link: string | null; // original URL pasted by user
   isPublic: boolean;
   sharingLevel: number;
+  liked?: string[];
+  disliked?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -142,6 +144,8 @@ export interface NetworkReview {
   rating: number;
   comment: string | null;
   depth: number;
+  liked?: string[];
+  disliked?: string[];
 }
 
 export interface NetworkNode {
@@ -193,6 +197,8 @@ export interface CreateReviewInput {
   link?: string;
   isPublic?: boolean;
   sharingLevel?: number;
+  liked?: string[];
+  disliked?: string[];
 }
 
 export interface CreateItemInput {
