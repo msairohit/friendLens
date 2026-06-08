@@ -198,59 +198,60 @@ export function ReviewCard({ review }: ReviewCardProps) {
   };
 
   return (
-    <GlassCard style={styles.card}>
-      {/* Header with User Info */}
-      <View style={styles.header}>
-        <Avatar
-          name={review.displayName}
-          isAnonymous={review.isAnonymous}
-          size="sm"
-        />
-        <View style={styles.userInfo}>
-          <Text style={[Typography.bodyBold, styles.userName]}>
-            {review.displayName}
-          </Text>
-          <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-            <Text style={[Typography.caption, styles.badgeText, { color: badge.color }]}>
-              {badge.label}
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => {
+        if (review.itemId) {
+          router.push(`/item/${review.itemId}`);
+        }
+      }}
+      style={{ width: '100%' }}
+    >
+      <GlassCard style={styles.card}>
+        {/* Header with User Info */}
+        <View style={styles.header}>
+          <Avatar
+            name={review.displayName}
+            isAnonymous={review.isAnonymous}
+            size="sm"
+          />
+          <View style={styles.userInfo}>
+            <Text style={[Typography.bodyBold, styles.userName]}>
+              {review.displayName}
             </Text>
+            <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+              <Text style={[Typography.caption, styles.badgeText, { color: badge.color }]}>
+                {badge.label}
+              </Text>
+            </View>
           </View>
+          <Text style={[Typography.caption, styles.date]}>
+            {formatRelativeTime(review.updatedAt || review.createdAt)}
+          </Text>
         </View>
-        <Text style={[Typography.caption, styles.date]}>
-          {formatRelativeTime(review.updatedAt || review.createdAt)}
-        </Text>
-      </View>
 
-      {/* Item info (Movie/Show) */}
-      <TouchableOpacity
-        style={styles.itemContainer}
-        activeOpacity={0.7}
-        onPress={() => {
-          if (review.itemId) {
-            router.push(`/item/${review.itemId}`);
-          }
-        }}
-      >
-        {review.item.posterUrl ? (
-          <Image source={{ uri: review.item.posterUrl }} style={styles.poster} />
-        ) : (
-          <View style={styles.posterPlaceholder}>
-            <Ionicons name={getItemIcon(review.item.type)} size={24} color={colors.textMuted} />
-          </View>
-        )}
-        <View style={styles.itemInfo}>
-          <Text style={[Typography.bodyBold, styles.itemTitle]}>
-            {review.item.title}
-          </Text>
-          <View style={styles.itemMeta}>
-            <Ionicons name={getItemIcon(review.item.type)} size={12} color={colors.textSecondary} />
-            <Text style={[Typography.caption, styles.itemTypeText]}>
-              {review.item.type.toUpperCase()}
-              {review.item.releaseYear ? ` • ${review.item.releaseYear}` : ''}
+        {/* Item info (Movie/Show) */}
+        <View style={styles.itemContainer}>
+          {review.item.posterUrl ? (
+            <Image source={{ uri: review.item.posterUrl }} style={styles.poster} />
+          ) : (
+            <View style={styles.posterPlaceholder}>
+              <Ionicons name={getItemIcon(review.item.type)} size={24} color={colors.textMuted} />
+            </View>
+          )}
+          <View style={styles.itemInfo}>
+            <Text style={[Typography.bodyBold, styles.itemTitle]}>
+              {review.item.title}
             </Text>
+            <View style={styles.itemMeta}>
+              <Ionicons name={getItemIcon(review.item.type)} size={12} color={colors.textSecondary} />
+              <Text style={[Typography.caption, styles.itemTypeText]}>
+                {review.item.type.toUpperCase()}
+                {review.item.releaseYear ? ` • ${review.item.releaseYear}` : ''}
+              </Text>
+            </View>
           </View>
         </View>
-      </TouchableOpacity>
 
       {/* Rating & Comment */}
       <View style={styles.ratingContainer}>
@@ -294,6 +295,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
           )}
         </View>
       )}
-    </GlassCard>
+      </GlassCard>
+    </TouchableOpacity>
   );
 }

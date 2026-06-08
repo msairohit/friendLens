@@ -146,6 +146,11 @@ export interface NetworkReview {
   depth: number;
   liked?: string[];
   disliked?: string[];
+  itemId: string;
+  itemPosterUrl?: string | null;
+  itemReleaseYear?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface NetworkNode {

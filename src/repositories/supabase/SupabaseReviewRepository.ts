@@ -305,6 +305,11 @@ export class SupabaseReviewRepository implements IReviewRepository {
       depth: row.depth as number,
       liked: (row.liked as string[]) || [],
       disliked: (row.disliked as string[]) || [],
+      itemId: row.item_id as string,
+      itemPosterUrl: (row.item_poster_url as string) || null,
+      itemReleaseYear: (row.item_release_year as number) || null,
+      createdAt: (row.created_at as string) || '',
+      updatedAt: (row.updated_at as string) || '',
     }));
   }
 
